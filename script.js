@@ -2,9 +2,11 @@
  * Visual PC-to-PC Hamming Demo
  */
 
+const DEFAULT_MSG = "OK";
+
 // --- STATE ---
 const state = {
-    text: "HELLO",
+    text: DEFAULT_MSG,
     packets: [],
     corruptedPacketIndex: -1,
     currentStep: 0
@@ -109,7 +111,7 @@ function init() {
     state.packets = [];
 
     let text = els.userInput.value.toUpperCase();
-    if (text.length === 0) { text = "HELLO"; els.userInput.value = "HELLO"; }
+    if (text.length === 0) { text = DEFAULT_MSG; els.userInput.value = DEFAULT_MSG; }
     state.text = text;
 
     for (let i = 0; i < text.length; i++) {
@@ -196,8 +198,6 @@ els.btn1.addEventListener('click', () => {
 // STEP 2: NOISE
 els.btn2.addEventListener('click', () => {
     els.btn2.disabled = true;
-    els.lightning.classList.remove('hidden');
-    els.lightning.classList.add('flash');
 
     const pIdx = Math.floor(Math.random() * state.packets.length);
     state.corruptedPacketIndex = pIdx;
@@ -206,9 +206,21 @@ els.btn2.addEventListener('click', () => {
     state.packets[pIdx].errorIdx = bIdx;
     state.packets[pIdx].receivedBits[bIdx] ^= 1;
 
+    // VISUAL: Move lightning to target packet
+    const group = els.movingBits.children[pIdx];
+    group.style.position = 'relative'; // Ensure absolute child positions relative to this
+    group.appendChild(els.lightning);
+
+    // Adjust lightning style for local positioning
+    els.lightning.style.top = '-40px'; // Hover above packet
+    els.lightning.style.left = '50%';
+    // Animation 'flash' handles the transform (translate -50%, -50%)
+
+    els.lightning.classList.remove('hidden');
+    els.lightning.classList.add('flash');
+
     setTimeout(() => {
         // Visual Update
-        const group = els.movingBits.children[pIdx];
         const bitsRow = group.querySelector('.packet-bits');
         const targetEl = bitsRow.children[bIdx];
 
@@ -230,13 +242,20 @@ els.btn2.addEventListener('click', () => {
 
                 els.movingBits.style.opacity = '0';
                 els.btn3.disabled = false;
+
+                // Reset Lightning
+                document.querySelector('.network-path').appendChild(els.lightning);
+                els.lightning.classList.add('hidden');
+                els.lightning.style.top = ''; // Clear inline styles
+                els.lightning.style.left = '';
             }, 1500);
         }, 1000);
     }, 300);
 
     setTimeout(() => {
         els.lightning.classList.remove('flash');
-        els.lightning.classList.add('hidden');
+        // The lightning is hidden and moved back to network-path in the nested setTimeout
+        // This timeout ensures the flash animation class is removed.
     }, 1000);
 });
 
