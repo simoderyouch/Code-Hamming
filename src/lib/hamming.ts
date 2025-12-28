@@ -2,64 +2,88 @@
 // Single Error Correction, Double Error Detection
 
 import { BitValue, Vector, Matrix } from '@/types/hamming';
-import { matrixMultiply, mod2 } from './matrix-utils';
+import { matrixMultiply, vectorMatrixMultiply, mod2 } from './matrix-utils';
 
 /**
  * Generator Matrix G for Hamming(7,4)
  * 
- * Codeword positions: [c1, c2, c3, c4, c5, c6, c7]
- * - c1 = p1 (parity bit 1)
- * - c2 = p2 (parity bit 2)
- * - c3 = d1 (data bit 1)
- * - c4 = p4 (parity bit 4)
- * - c5 = d2 (data bit 2)
- * - c6 = d3 (data bit 3)
- * - c7 = d4 (data bit 4)
+ * Systematic form: [p1, p2, d1, p4, d2, d3, d4]
+ * - Position 1 (p1): checks positions 1,3,5,7 → p1 = d1 ⊕ d2 ⊕ d4
+ * - Position 2 (p2): checks positions 2,3,6,7 → p2 = d1 ⊕ d3 ⊕ d4
+ * - Position 3 (d1): data bit 1
+ * - Position 4 (p4): checks positions 4,5,6,7 → p4 = d2 ⊕ d3 ⊕ d4
+ * - Position 5 (d2): data bit 2
+ * - Position 6 (d3): data bit 3
+ * - Position 7 (d4): data bit 4
  * 
- * This is G^T (transposed) for c = G^T × d computation
- * Each column shows what data bits contribute to each codeword position
+ * Matrix is 4×7: each row shows how one data bit contributes to codeword
+ * c = d × G (mod 2) where d is row vector [d1, d2, d3, d4]
  */
 export const GENERATOR_MATRIX: Matrix = [
-    [1, 1, 0, 1],  // c1 = d1 ⊕ d2 ⊕ d4 (p1)
-    [1, 0, 1, 1],  // c2 = d1 ⊕ d3 ⊕ d4 (p2)
-    [1, 0, 0, 0],  // c3 = d1
-    [0, 1, 1, 1],  // c4 = d2 ⊕ d3 ⊕ d4 (p4)
-    [0, 1, 0, 0],  // c5 = d2
-    [0, 0, 1, 0],  // c6 = d3
-    [0, 0, 0, 1],  // c7 = d4
+    //  c1  c2  c3  c4  c5  c6  c7
+    //  p1  p2  d1  p4  d2  d3  d4
+    [1, 1, 1, 0, 0, 0, 0],  // d1 contributes to p1, p2, d1
+    [1, 0, 0, 1, 1, 0, 0],  // d2 contributes to p1, p4, d2
+    [0, 1, 0, 1, 0, 1, 0],  // d3 contributes to p2, p4, d3
+    [1, 1, 0, 1, 0, 0, 1],  // d4 contributes to p1, p2, p4, d4
 ];
 
 /**
  * Parity Check Matrix H for Hamming(7,4)
+ * 
  * H × codeword = 0 (if no error)
  * H × receivedWord = syndrome (error position in binary)
  * 
- * Structure (each row checks specific positions):
- *     c1 c2 c3 c4 c5 c6 c7
- * s1 [ 1  0  1  0  1  0  1 ]  checks positions 1,3,5,7 (binary: xxx1)
- * s2 [ 0  1  1  0  0  1  1 ]  checks positions 2,3,6,7 (binary: xx1x)
- * s4 [ 0  0  0  1  1  1  1 ]  checks positions 4,5,6,7 (binary: x1xx)
+ * Matrix is 7×3: each row corresponds to one codeword bit position
+ * The syndrome s = H × r gives error position in binary [s1, s2, s4]
+ * 
+ * Each row is the binary representation of the bit position:
+ *        s1  s2  s4
+ * c1  [  1   0   0 ]  position 1 = 001 binary
+ * c2  [  0   1   0 ]  position 2 = 010 binary
+ * c3  [  1   1   0 ]  position 3 = 011 binary
+ * c4  [  0   0   1 ]  position 4 = 100 binary
+ * c5  [  1   0   1 ]  position 5 = 101 binary
+ * c6  [  0   1   1 ]  position 6 = 110 binary
+ * c7  [  1   1   1 ]  position 7 = 111 binary
  */
 export const PARITY_CHECK_MATRIX: Matrix = [
-    [1, 0, 1, 0, 1, 0, 1],  // s1: checks positions 1,3,5,7
-    [0, 1, 1, 0, 0, 1, 1],  // s2: checks positions 2,3,6,7
-    [0, 0, 0, 1, 1, 1, 1],  // s4: checks positions 4,5,6,7
+    //  s1  s2  s4
+    [1, 0, 0],  // c1 (position 1)
+    [0, 1, 0],  // c2 (position 2)
+    [1, 1, 0],  // c3 (position 3)
+    [0, 0, 1],  // c4 (position 4)
+    [1, 0, 1],  // c5 (position 5)
+    [0, 1, 1],  // c6 (position 6)
+    [1, 1, 1],  // c7 (position 7)
 ];
 
 /**
  * Extended Parity Check Matrix H for Extended Hamming(8,4) SECDED
+ * Matrix is 8×4: each row corresponds to one codeword bit position
  * Adds overall parity bit p0 at position 0
- *     p0 c1 c2 c3 c4 c5 c6 c7
- * s1 [ 0  1  0  1  0  1  0  1 ]  checks positions 1,3,5,7
- * s2 [ 0  0  1  1  0  0  1  1 ]  checks positions 2,3,6,7
- * s4 [ 0  0  0  0  1  1  1  1 ]  checks positions 4,5,6,7
- * p0 [ 1  1  1  1  1  1  1  1 ]  overall parity (all bits)
+ * 
+ * Each row is the binary representation of the bit position plus parity:
+ *         s1  s2  s4  p0
+ * p0   [  0   0   0   1 ]  position 0 (overall parity)
+ * c1   [  1   0   0   1 ]  position 1
+ * c2   [  0   1   0   1 ]  position 2
+ * c3   [  1   1   0   1 ]  position 3
+ * c4   [  0   0   1   1 ]  position 4
+ * c5   [  1   0   1   1 ]  position 5
+ * c6   [  0   1   1   1 ]  position 6
+ * c7   [  1   1   1   1 ]  position 7
  */
 export const EXTENDED_PARITY_CHECK_MATRIX: Matrix = [
-    [0, 1, 0, 1, 0, 1, 0, 1],  // s1: checks positions 1,3,5,7
-    [0, 0, 1, 1, 0, 0, 1, 1],  // s2: checks positions 2,3,6,7
-    [0, 0, 0, 0, 1, 1, 1, 1],  // s4: checks positions 4,5,6,7
-    [1, 1, 1, 1, 1, 1, 1, 1],  // p0: overall parity
+    //  s1  s2  s4  p0
+    [0, 0, 0, 1],  // p0 (position 0)
+    [1, 0, 0, 1],  // c1 (position 1)
+    [0, 1, 0, 1],  // c2 (position 2)
+    [1, 1, 0, 1],  // c3 (position 3)
+    [0, 0, 1, 1],  // c4 (position 4)
+    [1, 0, 1, 1],  // c5 (position 5)
+    [0, 1, 1, 1],  // c6 (position 6)
+    [1, 1, 1, 1],  // c7 (position 7)
 ];
 
 /**
@@ -89,8 +113,8 @@ export function encode(dataBits: number[]): number[] {
         throw new Error('Data must be exactly 4 bits');
     }
 
-    // c = G^T × d (using the transposed generator matrix)
-    return matrixMultiply(GENERATOR_MATRIX, dataBits);
+    // c = d × G (using vector-matrix multiplication)
+    return vectorMatrixMultiply(dataBits, GENERATOR_MATRIX);
 }
 
 /**
@@ -104,12 +128,12 @@ export function encodeExtended(dataBits: number[]): number[] {
         throw new Error('Data must be exactly 4 bits');
     }
 
-    // First get the standard Hamming(7,4) codeword
-    const hamming7 = matrixMultiply(GENERATOR_MATRIX, dataBits);
-    
+    // First get the standard Hamming(7,4) codeword using d × G
+    const hamming7 = vectorMatrixMultiply(dataBits, GENERATOR_MATRIX);
+
     // Calculate overall parity (XOR of all 7 bits)
     const p0 = mod2(hamming7.reduce((a, b) => a + b, 0));
-    
+
     // Return [p0, c1, c2, c3, c4, c5, c6, c7]
     return [p0, ...hamming7];
 }
@@ -124,7 +148,8 @@ export function calculateSyndrome(receivedBits: number[]): number[] {
         throw new Error('Received bits must be exactly 7 bits');
     }
 
-    return matrixMultiply(PARITY_CHECK_MATRIX, receivedBits);
+    // s = r × H (using vector-matrix multiplication with 7×3 matrix)
+    return vectorMatrixMultiply(receivedBits, PARITY_CHECK_MATRIX);
 }
 
 /**
@@ -137,7 +162,8 @@ export function calculateExtendedSyndrome(receivedBits: number[]): number[] {
         throw new Error('Received bits must be exactly 8 bits');
     }
 
-    return matrixMultiply(EXTENDED_PARITY_CHECK_MATRIX, receivedBits);
+    // s = r × H_ext (using vector-matrix multiplication with 8×4 matrix)
+    return vectorMatrixMultiply(receivedBits, EXTENDED_PARITY_CHECK_MATRIX);
 }
 
 /**
@@ -177,13 +203,13 @@ export function analyzeExtendedError(syndrome: number[]): ExtendedErrorResult {
 
     const [s1, s2, s4, p0] = syndrome;
     const syndromeValue = s1 * 1 + s2 * 2 + s4 * 4; // Position from syndrome bits
-    
+
     // Decision table for SECDED:
     // p0=0, syndrome=0: No error
     // p0=1, syndrome=0: Error in p0 bit (position 0)
     // p0=1, syndrome≠0: Single bit error (correctable)
     // p0=0, syndrome≠0: Double bit error (detectable but not correctable)
-    
+
     if (p0 === 0 && syndromeValue === 0) {
         return { errorType: 'none', errorPosition: 0, canCorrect: true };
     } else if (p0 === 1 && syndromeValue === 0) {
@@ -282,16 +308,16 @@ export function injectError(codeword: number[]): { corrupted: number[], position
  * @param numErrors - Number of errors to inject (1 or 2)
  * @returns Object with corrupted codeword and error positions
  */
-export function injectExtendedError(codeword: number[], numErrors: number = 1): { 
-    corrupted: number[], 
-    positions: number[] 
+export function injectExtendedError(codeword: number[], numErrors: number = 1): {
+    corrupted: number[],
+    positions: number[]
 } {
     const corrupted = [...codeword];
     const positions: number[] = [];
-    
+
     // Get random positions
     const availablePositions = [0, 1, 2, 3, 4, 5, 6, 7];
-    
+
     for (let i = 0; i < numErrors && availablePositions.length > 0; i++) {
         const idx = Math.floor(Math.random() * availablePositions.length);
         const position = availablePositions.splice(idx, 1)[0];

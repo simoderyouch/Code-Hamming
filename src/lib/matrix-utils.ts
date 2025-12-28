@@ -11,6 +11,7 @@ export function mod2(value: number): BitValue {
 
 /**
  * Multiply a matrix by a vector using mod-2 arithmetic
+ * Result = Matrix × Vector
  * @param matrix - m x n matrix
  * @param vector - n-element vector
  * @returns m-element result vector
@@ -22,6 +23,28 @@ export function matrixMultiply(matrix: Matrix, vector: Vector): Vector {
         let sum = 0;
         for (let j = 0; j < vector.length; j++) {
             sum += matrix[i][j] * vector[j];
+        }
+        result.push(mod2(sum));
+    }
+
+    return result;
+}
+
+/**
+ * Multiply a vector by a matrix using mod-2 arithmetic
+ * Result = Vector × Matrix
+ * @param vector - m-element vector (row vector)
+ * @param matrix - m x n matrix
+ * @returns n-element result vector
+ */
+export function vectorMatrixMultiply(vector: Vector, matrix: Matrix): Vector {
+    const result: Vector = [];
+    const numCols = matrix[0].length;
+
+    for (let j = 0; j < numCols; j++) {
+        let sum = 0;
+        for (let i = 0; i < vector.length; i++) {
+            sum += vector[i] * matrix[i][j];
         }
         result.push(mod2(sum));
     }

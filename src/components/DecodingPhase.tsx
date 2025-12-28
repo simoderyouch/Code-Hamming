@@ -61,35 +61,12 @@ export function DecodingPhase({
             </div>
 
             {/* Equation Visualization */}
-            <motion.div 
+            <motion.div
                 className="flex items-center justify-center gap-6 flex-wrap"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
             >
-                {/* Parity Check Matrix */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                >
-                    <MatrixDisplay
-                        matrix={extended ? EXTENDED_PARITY_CHECK_MATRIX : PARITY_CHECK_MATRIX}
-                        label={extended ? "Extended Parity Check Matrix (H)" : "Parity Check Matrix (H)"}
-                        highlight={highlight}
-                    />
-                </motion.div>
-
-                {/* Multiplication Symbol */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3, duration: 0.3 }}
-                    className="text-3xl text-cyber-cyan/60 font-bold"
-                >
-                    ×
-                </motion.div>
-
                 {/* Received Vector */}
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -105,6 +82,30 @@ export function DecodingPhase({
                         extended={extended}
                     />
                 </motion.div>
+
+                {/* Multiplication Symbol */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3, duration: 0.3 }}
+                    className="text-3xl text-cyber-cyan/60 font-bold"
+                >
+                    ×
+                </motion.div>
+                {/* Parity Check Matrix */}
+
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <MatrixDisplay
+                        matrix={extended ? EXTENDED_PARITY_CHECK_MATRIX : PARITY_CHECK_MATRIX}
+                        label={extended ? "Extended Parity Check Matrix (H)" : "Parity Check Matrix (H)"}
+                        highlight={highlight}
+                    />
+                </motion.div>
+
 
                 {/* Equals Symbol */}
                 {showSyndrome && (
@@ -139,13 +140,12 @@ export function DecodingPhase({
                                             {syndromeLabels[idx]}:
                                         </span>
                                         <div
-                                            className={`w-12 h-12 flex items-center justify-center rounded-lg font-mono text-lg font-bold border-2 ${
-                                                bit === 1 
-                                                    ? extended && idx === 3
-                                                        ? 'bg-cyber-amber/30 text-cyber-amber border-cyber-amber'
-                                                        : 'bg-cyber-purple/30 text-cyber-purple border-cyber-purple'
-                                                    : 'bg-cyber-surface text-cyber-cyan/50 border-cyber-border'
-                                            }`}
+                                            className={`w-12 h-12 flex items-center justify-center rounded-lg font-mono text-lg font-bold border-2 ${bit === 1
+                                                ? extended && idx === 3
+                                                    ? 'bg-cyber-amber/30 text-cyber-amber border-cyber-amber'
+                                                    : 'bg-cyber-purple/30 text-cyber-purple border-cyber-purple'
+                                                : 'bg-cyber-surface text-cyber-cyan/50 border-cyber-border'
+                                                }`}
                                         >
                                             {bit}
                                         </div>
@@ -167,13 +167,12 @@ export function DecodingPhase({
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.5, duration: 0.5 }}
-                    className={`max-w-2xl mx-auto rounded-lg p-6 border-2 ${
-                        isDoubleError
-                            ? 'bg-cyber-red/10 border-cyber-red'
-                            : isSingleError
-                                ? extended ? 'bg-cyber-amber/10 border-cyber-amber' : 'bg-cyber-red/10 border-cyber-red'
-                                : 'bg-cyber-green/10 border-cyber-green'
-                    }`}
+                    className={`max-w-2xl mx-auto rounded-lg p-6 border-2 ${isDoubleError
+                        ? 'bg-cyber-red/10 border-cyber-red'
+                        : isSingleError
+                            ? extended ? 'bg-cyber-amber/10 border-cyber-amber' : 'bg-cyber-red/10 border-cyber-red'
+                            : 'bg-cyber-green/10 border-cyber-green'
+                        }`}
                 >
                     <div className="flex items-center gap-4">
                         {isDoubleError ? (
@@ -203,13 +202,12 @@ export function DecodingPhase({
                         )}
 
                         <div className="flex-1">
-                            <h3 className={`font-bold text-lg ${
-                                isDoubleError ? 'text-cyber-red' : isSingleError ? (extended ? 'text-cyber-amber' : 'text-cyber-red') : 'text-cyber-green'
-                            }`}>
-                                {isDoubleError 
-                                    ? 'Double Error Detected - Cannot Correct!' 
-                                    : isSingleError 
-                                        ? 'Single Error Detected - Correctable!' 
+                            <h3 className={`font-bold text-lg ${isDoubleError ? 'text-cyber-red' : isSingleError ? (extended ? 'text-cyber-amber' : 'text-cyber-red') : 'text-cyber-green'
+                                }`}>
+                                {isDoubleError
+                                    ? 'Double Error Detected - Cannot Correct!'
+                                    : isSingleError
+                                        ? 'Single Error Detected - Correctable!'
                                         : 'No Error Detected'}
                             </h3>
 
@@ -268,11 +266,10 @@ export function DecodingPhase({
                                     return (
                                         <div
                                             key={idx}
-                                            className={`w-10 h-10 flex items-center justify-center rounded font-mono font-bold ${
-                                                isErrorBit
-                                                    ? 'bg-cyber-red/30 text-cyber-red border-2 border-cyber-red'
-                                                    : 'bg-cyber-surface text-cyber-cyan/70 border border-cyber-border'
-                                            }`}
+                                            className={`w-10 h-10 flex items-center justify-center rounded font-mono font-bold ${isErrorBit
+                                                ? 'bg-cyber-red/30 text-cyber-red border-2 border-cyber-red'
+                                                : 'bg-cyber-surface text-cyber-cyan/70 border border-cyber-border'
+                                                }`}
                                         >
                                             {bit}
                                         </div>
@@ -280,7 +277,7 @@ export function DecodingPhase({
                                 })}
                             </div>
                         </div>
-                        
+
                         <motion.div
                             initial={{ opacity: 0, scale: 0 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -288,7 +285,7 @@ export function DecodingPhase({
                         >
                             <ArrowRight className="w-8 h-8 text-cyber-cyan" />
                         </motion.div>
-                        
+
                         <div className="flex flex-col items-center gap-2">
                             <span className="text-sm text-cyber-green">Corrected</span>
                             <div className="flex gap-1">
@@ -300,11 +297,10 @@ export function DecodingPhase({
                                             initial={isErrorBit ? { rotateY: 0 } : {}}
                                             animate={isErrorBit ? { rotateY: 180 } : {}}
                                             transition={{ delay: 2.5, duration: 0.5 }}
-                                            className={`w-10 h-10 flex items-center justify-center rounded font-mono font-bold ${
-                                                isErrorBit
-                                                    ? 'bg-cyber-green/30 text-cyber-green border-2 border-cyber-green'
-                                                    : 'bg-cyber-surface text-cyber-cyan/70 border border-cyber-border'
-                                            }`}
+                                            className={`w-10 h-10 flex items-center justify-center rounded font-mono font-bold ${isErrorBit
+                                                ? 'bg-cyber-green/30 text-cyber-green border-2 border-cyber-green'
+                                                : 'bg-cyber-surface text-cyber-cyan/70 border border-cyber-border'
+                                                }`}
                                         >
                                             {bit}
                                         </motion.div>
@@ -350,7 +346,7 @@ export function DecodingPhase({
                             <span className="font-bold text-cyber-cyan">SECDED</span>: Single Error Correction, Double Error Detection.
                             {' '}<span className="font-mono text-cyber-purple">s = [s₁, s₂, s₄]</span> gives position,
                             {' '}<span className="font-mono text-cyber-amber">p₀</span> (overall parity) determines error type.
-                            <br/>
+                            <br />
                             <span className="text-cyber-green">p₀=1, syndrome≠0</span> → single error (correctable),
                             {' '}<span className="text-cyber-red">p₀=0, syndrome≠0</span> → double error (detected only)
                         </>
@@ -358,7 +354,7 @@ export function DecodingPhase({
                         <>
                             <span className="font-bold text-cyber-cyan">SEC</span>: Single Error Correction.
                             {' '}<span className="font-mono text-cyber-purple">s = [s₁, s₂, s₄]</span> directly gives error position.
-                            <br/>
+                            <br />
                             <span className="font-mono">error_pos = s₁×1 + s₂×2 + s₄×4</span>
                         </>
                     )}

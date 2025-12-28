@@ -104,7 +104,7 @@ export function EncodingPhase({
             </div>
 
             {/* Codeword Breakdown */}
-            {showResult && (
+            {false && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -119,39 +119,35 @@ export function EncodingPhase({
                             const bitType = extended ? getExtendedBitType(idx) : getBitType(idx);
                             const isOverallParity = bitType === 'overall-parity';
                             const isParity = bitType === 'parity';
-                            
+
                             // Position labels for standard Hamming(7,4)
                             const standardLabels = ['p1', 'p2', 'd1', 'p4', 'd2', 'd3', 'd4'];
                             const extendedLabels = ['p0', 'p1', 'p2', 'd1', 'p4', 'd2', 'd3', 'd4'];
                             const labels = extended ? extendedLabels : standardLabels;
-                            
+
                             return (
                                 <motion.div
                                     key={idx}
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{ delay: 1.4 + idx * 0.1, duration: 0.3 }}
-                                    className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 ${
-                                        isOverallParity
+                                    className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 ${isOverallParity
                                             ? 'bg-cyber-purple/20 border-cyber-purple'
                                             : isParity
                                                 ? 'bg-cyber-amber/20 border-cyber-amber'
                                                 : 'bg-cyber-green/20 border-cyber-green'
-                                    }`}
+                                        }`}
                                 >
-                                    <span className={`text-xs font-mono ${
-                                        isOverallParity ? 'text-cyber-purple' : isParity ? 'text-cyber-amber' : 'text-cyber-green'
-                                    }`}>
+                                    <span className={`text-xs font-mono ${isOverallParity ? 'text-cyber-purple' : isParity ? 'text-cyber-amber' : 'text-cyber-green'
+                                        }`}>
                                         {labels[idx]}
                                     </span>
-                                    <span className={`text-2xl font-bold font-mono ${
-                                        isOverallParity ? 'text-cyber-purple' : isParity ? 'text-cyber-amber' : 'text-cyber-green'
-                                    }`}>
+                                    <span className={`text-2xl font-bold font-mono ${isOverallParity ? 'text-cyber-purple' : isParity ? 'text-cyber-amber' : 'text-cyber-green'
+                                        }`}>
                                         {bit}
                                     </span>
-                                    <span className={`text-xs ${
-                                        isOverallParity ? 'text-cyber-purple/70' : isParity ? 'text-cyber-amber/70' : 'text-cyber-green/70'
-                                    }`}>
+                                    <span className={`text-xs ${isOverallParity ? 'text-cyber-purple/70' : isParity ? 'text-cyber-amber/70' : 'text-cyber-green/70'
+                                        }`}>
                                         {isOverallParity ? 'Overall' : isParity ? 'Parity' : 'Data'}
                                     </span>
                                 </motion.div>
